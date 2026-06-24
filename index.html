@@ -35,6 +35,10 @@ table{
     background:white;
 }
 
+tbody tr{
+    border-bottom:2px solid #d1d1d1;
+}
+
 th,td{
     border:1px solid #000000;
     padding:8px;
@@ -98,6 +102,7 @@ th{
 <script>
 
 const STORAGE_KEY = "dailyWorkLog";
+const jobColors = new Map();
 
 document.getElementById("logDate").value =
 new Date().toISOString().split("T")[0];
@@ -129,6 +134,13 @@ function hashColor(text){
     return `hsl(${hue},${saturation}%,${lightness}%)`;
 }
 
+function getJobColor(job){
+    if(!jobColors.has(job)){
+        jobColors.set(job, hashColor(job));
+    }
+    return jobColors.get(job);
+}
+
 function addEntry(){
 
     const job = document.getElementById("jobInput").value.trim();
@@ -155,7 +167,7 @@ function createRow(time,job,desc){
 
     const tr = document.createElement("tr");
 
-    tr.style.backgroundColor = hashColor(job);
+    tr.style.backgroundColor = getJobColor(job);
 
     tr.innerHTML = `
         <td contenteditable="true">${time}</td>
@@ -174,7 +186,7 @@ function createRow(time,job,desc){
                 tr.children[1].innerText;
 
             tr.style.backgroundColor =
-                hashColor(updatedJob);
+                getJobColor(updatedJob);
 
             saveData();
         });
