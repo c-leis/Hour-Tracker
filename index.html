@@ -109,6 +109,15 @@ new Date().toISOString().split("T")[0];
 
 loadData();
 
+document.getElementById("descInput")
+    .addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            addEntry();
+        }
+    });
+
+    
 function getCurrentTime(){
 
     let d = new Date();
