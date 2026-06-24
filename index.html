@@ -118,13 +118,15 @@ function hashColor(text){
 
     let hash = 0;
 
-    for(let i=0;i<text.length;i++){
+    for(let i = 0; i < text.length; i++){
         hash = text.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    let hue = Math.abs(hash % 280);
+    const hue = Math.abs(hash % 360);
+    const saturation = 60 + (Math.abs(hash >> 8) % 20);
+    const lightness = 82 + (Math.abs(hash >> 16) % 8);
 
-    return `hsl(${hue},70%,85%)`;
+    return `hsl(${hue},${saturation}%,${lightness}%)`;
 }
 
 function addEntry(){
