@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Daily Work Log</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    margin:20px;
+    background:#f4f4f4;
+}
+
+h1{
+    margin-top:0;
+}
+
+.controls{
+    margin-bottom:20px;
+}
+
+input{
+    padding:6px;
+}
+
+button{
+    padding:6px 12px;
+    margin-right:5px;
+    cursor:pointer;
+}
+
+table{
+    border-collapse:collapse;
+    width:100%;
+    background:white;
+}
+
+th,td{
+    border:1px solid #ccc;
+    padding:8px;
+}
+
+th{
+    background:#333;
+    color:white;
+}
+
+td[contenteditable="true"]{
+    background:#fffdf5;
+}
+
+.deleteBtn{
+    background:#d9534f;
+    color:white;
+    border:none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Daily Work Log</h1>
+
+<div class="controls">
+
+<label>Date:</label>
+<input type="date" id="logDate">
+
+<br><br>
+
+<label>Job #</label>
+<input id="jobInput">
+
+<label>Description</label>
+<input id="descInput" style="width:400px;">
+
+<button onclick="addEntry()">Add Entry</button>
+
+<button onclick="copyTable()">Copy Table For OneNote</button>
+
+<button onclick="exportData()">Export Backup</button>
+
+<input type="file" id="importFile" onchange="importData(event)">
+
+</div>
+
+<table id="logTable">
+
+<thead>
+<tr>
+<th>Time</th>
+<th>Job</th>
+<th>Description</th>
+<th>Delete</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+<script>
+
+const STORAGE_KEY = "dailyWorkLog";
+
+document.getElementById("logDate").value =
+new Date().toISOString().split("T")[0];
+
+loadData();
+
+function getCurrentTime(){
+
+    let d = new Date();
+
+    return d.toLocaleTimeString([],{
+        hour:'numeric',
+        minute:'2-digit'
+    });
+}
+
+function hashColor(text){
+
+    let hash = 0;
+
+    for(let i=0;i<text.length;i++){
+        hash = text.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    let hue = Math.abs(hash % 360);
+
+    return `hsl(${hue},70%,85%)`;
+}
+
+function addEntry(){
+
+    const job = document.getElementById("jobInput").value.trim();
+    const desc = document.getElementById("descInput").value.trim();
+
+    if(!job) return;
+
+    const tbody = document.querySelector("#logTable tbody");
+
+    const row = createRow(
+        getCurrentTime(),
+        job,
+        desc
+    );
+
+    tbody.appendChild(row);
+
+    saveData();
+
+    document.getElementById("descInput").value="";
+}
+
+function createRow(time,job,desc){
+
+    const tr = document.createElement("tr");
+
+    tr.style.backgroundColor = hashColor(job);
+
+    tr.innerHTML = `
+        <td contenteditable="true">${time}</td>
+        <td contenteditable="true">${job}</td>
+        <td contenteditable="true">${desc}</td>
+        <td>
+            <button class="deleteBtn">X</button>
+        </td>
+    `;
+
+    tr.querySelectorAll("[contenteditable]")
+    .forEach(cell=>{
+        cell.addEventListener("input",()=>{
+
+            const updatedJob =
+                tr.children[1].innerText;
+
+            tr.style.backgroundColor =
+                hashColor(updatedJob);
+
+            saveData();
+        });
+    });
+
+    tr.querySelector(".deleteBtn")
+    .addEventListener("click",()=>{
+
+        tr.remove();
+        saveData();
+
+    });
+
+    return tr;
+}
+
+function saveData(){
+
+    const rows = [];
+
+    document
+    .querySelectorAll("#logTable tbody tr")
+    .forEach(row=>{
+
+        rows.push({
+
+            time: row.children[0].innerText,
+            job: row.children[1].innerText,
+            desc: row.children[2].innerText
+
+        });
+
+    });
+
+    const data = {
+
+        date: document.getElementById("logDate").value,
+        rows: rows
+
+    };
+
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(data)
+    );
+}
+
+function loadData(){
+
+    const data =
+    JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+    if(!data) return;
+
+    document.getElementById("logDate").value =
+        data.date;
+
+    const tbody =
+    document.querySelector("#logTable tbody");
+
+    data.rows.forEach(r=>{
+
+        tbody.appendChild(
+            createRow(
+                r.time,
+                r.job,
+                r.desc
+            )
+        );
+
+    });
+}
+
+function copyTable(){
+
+    const table =
+        document.getElementById("logTable");
+
+    const range =
+        document.createRange();
+
+    range.selectNode(table);
+
+    const selection =
+        window.getSelection();
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    document.execCommand("copy");
+
+    selection.removeAllRanges();
+
+    alert("Table copied. Paste into OneNote.");
+}
+
+function exportData(){
+
+    const data =
+    localStorage.getItem(STORAGE_KEY);
+
+    const blob =
+    new Blob([data],{
+        type:"application/json"
+    });
+
+    const a =
+    document.createElement("a");
+
+    a.href =
+    URL.createObjectURL(blob);
+
+    a.download =
+    "worklog_backup.json";
+
+    a.click();
+}
+
+function importData(event){
+
+    const file =
+    event.target.files[0];
+
+    if(!file) return;
+
+    const reader =
+    new FileReader();
+
+    reader.onload = function(e){
+
+        localStorage.setItem(
+            STORAGE_KEY,
+            e.target.result
+        );
+
+        location.reload();
+    };
+
+    reader.readAsText(file);
+}
+
+document
+.getElementById("logDate")
+.addEventListener("change",saveData);
+
+</script>
+
+</body>
+</html>
