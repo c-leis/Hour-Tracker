@@ -122,7 +122,7 @@ function hashColor(text){
         hash = text.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    let hue = Math.abs(hash % 360);
+    let hue = Math.abs(hash % 280);
 
     return `hsl(${hue},70%,85%)`;
 }
