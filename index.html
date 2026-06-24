@@ -8,7 +8,8 @@
 body{
     font-family:Arial,sans-serif;
     margin:20px;
-    background:#f4f4f4;
+    background:#2f2f2f;
+    color:#f0f0f0;
 }
 
 h1{
@@ -29,10 +30,31 @@ button{
     cursor:pointer;
 }
 
+.bottom-controls{
+    margin-top:20px;
+    padding:12px;
+    background:#3b3b3b;
+    border-radius:8px;
+}
+
+.bottom-controls label,
+.bottom-controls select{
+    color:#f0f0f0;
+}
+
+.bottom-controls select{
+    margin-left:10px;
+    padding:6px;
+    background:#2f2f2f;
+    border:1px solid #555;
+    color:#f0f0f0;
+}
+
 table{
     border-collapse:collapse;
     width:100%;
     background:white;
+    color:#000;
 }
 
 tbody tr{
@@ -99,10 +121,44 @@ th{
 
 </table>
 
+<div class="bottom-controls">
+    <label for="backgroundColor">Page background:</label>
+    <select id="backgroundColor">
+        <option value="#2f2f2f">Dark Gray</option>
+        <option value="#121212">Black</option>
+        <option value="#ffffff">White</option>
+        <option value="#3b3b3b">Charcoal</option>
+        <option value="#2a2a3d">Midnight</option>
+        <option value="#2a3b2a">Forest</option>
+    </select>
+</div>
+
 <script>
 
 const STORAGE_KEY = "dailyWorkLog";
 const jobColors = new Map();
+const backgroundColorSelector = document.getElementById("backgroundColor");
+
+function updateBodyTextColor(){
+    const bg = backgroundColorSelector.value;
+    const rgb = parseInt(bg.slice(1), 16);
+    const r = (rgb >> 16) & 255;
+    const g = (rgb >> 8) & 255;
+    const b = rgb & 255;
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    document.body.style.color = brightness > 160 ? "#000" : "#f0f0f0";
+}
+
+function setPageBackground(color){
+    document.body.style.backgroundColor = color;
+    updateBodyTextColor();
+}
+
+backgroundColorSelector.addEventListener("change", () => {
+    setPageBackground(backgroundColorSelector.value);
+});
+
+setPageBackground(backgroundColorSelector.value);
 
 document.getElementById("logDate").value =
 new Date().toISOString().split("T")[0];
@@ -117,7 +173,6 @@ document.getElementById("descInput")
         }
     });
 
-    
 function getCurrentTime(){
 
     let d = new Date();
